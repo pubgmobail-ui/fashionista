@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>Fashionista | تسوقي بأناقة</title>
+
+<!-- مشاركة واتساب / تليجرام -->
+<meta property="og:title" content="Fashionista - أناقة السهرة في مكان واحد">
+<meta property="og:description" content="اختاري تصميمك المميز واطلبي بسهولة، دفع آمن ومتابعة حتى باب البيت">
+<meta property="og:image" content="images (2).jpeg">
+<meta property="og:type" content="website">
+
+<style>
+*{box-sizing:border-box;font-family:Tahoma}
+body{margin:0;background:#f6f6f6}
+
+/* الهيدر */
+header{
+background:#111;color:#fff;
+display:flex;align-items:center;
+padding:10px 20px
+}
+header img{height:45px}
+.cart-icon{
+margin-right:auto;
+position:relative;
+cursor:pointer
+}
+.cart-icon span{
+position:absolute;top:-5px;left:-8px;
+background:#e91e63;color:#fff;
+border-radius:50%;padding:2px 6px;font-size:12px
+}
+
+/* المنتجات */
+.products{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+gap:15px;padding:20px
+}
+.product{
+background:#fff;border-radius:12px;
+padding:10px;position:relative;
+box-shadow:0 4px 10px rgba(0,0,0,.1)
+}
+.product img{width:100%;border-radius:10px}
+.desc{
+background:#fff3a0;
+margin:8px 0;
+padding:8px;
+border-radius:6px;
+font-weight:bold;
+color:#444
+}
+.price{font-size:18px;font-weight:bold;margin:6px 0}
+.qty{
+display:flex;gap:10px;align-items:center
+}
+.qty button{
+width:30px;height:30px;
+border:none;border-radius:50%;
+background:#111;color:#fff;
+font-size:18px;cursor:pointer
+}
+.add{
+margin-top:8px;
+width:100%;
+background:#e91e63;
+color:#fff;border:none;
+padding:10px;border-radius:8px;
+cursor:pointer
+}
+
+/* السلة */
+#cartBox{
+position:fixed;top:0;left:-100%;
+width:100%;height:100%;
+background:#fff;z-index:10;
+padding:20px;transition:.4s
+}
+#cartBox.active{left:0}
+
+/* الدفع */
+.section{margin-top:15px}
+input,textarea{
+width:100%;padding:10px;
+margin-top:6px;border-radius:6px;
+border:1px solid #ccc
+}
+.confirm{
+background:#111;color:#fff;
+padding:12px;border:none;
+width:100%;margin-top:10px;
+border-radius:8px;font-size:16px
+}
+
+/* الوصل */
+#receipt{
+display:none;background:#fff;
+padding:20px;border-radius:12px
+}
+#receipt img{height:50px}
+</style>
+</head>
+
+<body>
+
+<header>
+<img src="images (2).jpeg">
+<div class="cart-icon" onclick="openCart()">🛒<span id="cartCount">0</span></div>
+</header>
+
+<div class="products" id="products"></div>
+
+<!-- السلة والدفع -->
+<div id="cartBox">
+<h2>إتمام الطلب</h2>
+
+<div id="cartItems"></div>
+
+<div class="section">
+<b>الدفع عبر فودافون كاش</b>
+<p>برجاء تحويل المبلغ على الرقم التالي ثم رفع صورة واضحة لعملية الدفع</p>
+<b>01206561893</b>
+
+<input type="file">
+<textarea placeholder="معلومات الدفع / تعليق"></textarea>
+</div>
+
+<div class="section">
+<b>العنوان الكامل بالتفصيل</b>
+<textarea placeholder="المحافظة - المركز - الحي - اسم الشارع - رقم العمارة - الدور - علامة مميزة"></textarea>
+</div>
+
+<button class="confirm" onclick="showReceipt()">تأكيد الطلب</button>
+
+<div id="receipt">
+<img src="images (2).jpeg">
+<h3>وصل الطلب</h3>
+<div id="receiptData"></div>
+<button onclick="window.print()">حفظ الوصل</button>
+</div>
+
+</div>
+
+<script>
+const data=[
+{img:"53208.jpeg.webp",desc:"تصميم أنيق يبرز جمال الإطلالة ويمنحك حضورًا مميزًا",price:1200},
+{img:"images (10).jpeg",desc:"قصة فاخرة تناسب المناسبات الخاصة والسهرات",price:1350},
+{img:"images (11).jpeg",desc:"تفاصيل راقية تعكس الذوق الرفيع",price:1400},
+{img:"images (3).jpeg",desc:"إطلالة جذابة تجمع بين البساطة والفخامة",price:1250},
+{img:"images (4).jpeg",desc:"تصميم عصري يناسب كل المناسبات الراقية",price:1500},
+{img:"images (5).jpeg",desc:"لمسة أنثوية ناعمة تزيدك تألقًا",price:1100},
+{img:"images (6).jpeg",desc:"ستايل فخم يمنحك ثقة وأناقة",price:1450},
+{img:"images (7).jpeg",desc:"تصميم مميز لمحبات التميز",price:1300},
+{img:"images (8).jpeg",desc:"تفصيل جذاب يلفت الأنظار",price:1550},
+{img:"images (9).jpeg",desc:"اختيار مثالي لإطلالة لا تُنسى",price:1600}
+];
+
+let cart=[];
+
+const products=document.getElementById("products");
+
+data.forEach((p,i)=>{
+products.innerHTML+=`
+<div class="product">
+<img src="${p.img}">
+<div class="desc">${p.desc}</div>
+<div class="price">${p.price} ج.م</div>
+<div class="qty">
+<button onclick="changeQty(${i},-1)">-</button>
+<span id="q${i}">1</span>
+<button onclick="changeQty(${i},1)">+</button>
+</div>
+<button class="add" onclick="addCart(${i})">إضافة للسلة</button>
+</div>`;
+});
+
+function changeQty(i,v){
+let s=document.getElementById("q"+i);
+let n=Math.max(1,+s.innerText+v);
+s.innerText=n;
+}
+
+function addCart(i){
+let q=+document.getElementById("q"+i).innerText;
+cart.push({...data[i],qty:q});
+document.getElementById("cartCount").innerText=cart.length;
+}
+
+function openCart(){
+document.getElementById("cartBox").classList.add("active");
+let html="";
+let total=0;
+cart.forEach(c=>{
+let t=c.qty*c.price;
+total+=t;
+html+=`<p>${c.desc} × ${c.qty} = ${t} ج.م</p>`;
+});
+html+=`<b>الإجمالي: ${total} ج.م</b>`;
+document.getElementById("cartItems").innerHTML=html;
+}
+
+function showReceipt(){
+document.getElementById("receipt").style.display="block";
+document.getElementById("receiptData").innerHTML=document.getElementById("cartItems").innerHTML;
+}
+</script>
+
+</body>
+</html>
